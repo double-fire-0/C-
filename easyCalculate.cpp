@@ -1,172 +1,176 @@
 #include <iostream>
-#include <string.h>
+#include <string>
+#include <stack>
+#include <vector>
+#include<ctype.h>
 
 using namespace std;
 
-template <class T>
-class Stack //堆
-{ 
-public:
-	T a[100];
-	int Top;
 
-	Stack() { Top = 0; }
-	T top()
-	{
-		return a[Top];
-	}
-
-	void pop() { Top--; }
-
-	bool isempty()
-	{
-		if (Top == 0)
-			return true;
-		else
-			return false;
-	}
-
-	void push(T b)
-	{
-		Top++;
-		a[Top] = b;
-	}
-};
-
-
-void transform(char inorder[], char post[], int &m) //将中缀表达式转换为后缀表达式
+int priority(char c)
 {
-	int n = strlen(inorder); 
-	Stack<char> operatorStack;		 //存放操作符的堆
-	for (int i = 0; i < n; i++)
-	{
-		if (inorder[i] >= '0' && inorder[i] <= '9') 
-		{
-			post[m] = inorder[i];
-			m++;
-		}
-		if (inorder[i] == '(')
-			operatorStack.push(inorder[i]); //若为‘（’直接压入堆栈
-		if (inorder[i] == '+')	  //若为‘+’与栈顶比较优先级，较低则将栈顶操作符加到数组中，在将‘+’压栈
-		{
-			if (!operatorStack.isempty() && (operatorStack.top() == '*' || operatorStack.top() == '/' || operatorStack.top() == '-'))
-			{
-				post[m++] = operatorStack.top();
-				operatorStack.pop();
-				operatorStack.push(inorder[i]);
-			}
-			else
-			{
-				operatorStack.push(inorder[i]);
-			}
-		}
-		if (inorder[i] == '-') //若为‘-’与栈顶比较优先级，较低则将栈顶操作符加到数组中，将‘-’压栈
-		{
-			if (!operatorStack.isempty() && (operatorStack.top() == '*' || operatorStack.top() == '/'))
-			{
-				post[m++] = operatorStack.top();
-				operatorStack.pop();
-				operatorStack.push(inorder[i]);
-			}
-			else
-			{
-				operatorStack.push(inorder[i]);
-			}
-		}
-		if (inorder[i] == '*' || inorder[i] == '/')
-			operatorStack.push(inorder[i]); //若为‘*’或‘/’直接压栈
-		if (inorder[i] == ')')	  //若遇到‘）’将栈中的操作符依次弹出直到遇到‘（’结束
-		{
-			while (operatorStack.top() != '(')
-			{
-				post[m++] = operatorStack.top();
-				operatorStack.pop();
-			}
-			operatorStack.pop(); //弹出‘（’
-		}
-	}
-	while (!operatorStack.isempty()) 
-	{
-		post[m++] = operatorStack.top();
-		operatorStack.pop();
-	}
+	if (c == '+' || c == '-')
+		return 0;
+	if (c == '*' || c == '/')
+		return 1;
+	if (c == '(' || c == ')')
+		return -1;
+	return -1;
 }
 
-int comput(char post[], int n) //通过转换后的表达式求结果
+bool isOperator(char c)
 {
-	Stack<int> resultStack; //存放运算结果的堆
-	int a, b, c, result;
-	for (int i = 0; i < n; i++)
-	{
-		if (post[i] >= '0' && post[i] <= '9')
-		{
-			resultStack.push((post[i] - '0')); //char转int
-		}
-		
-		//对四则运算符进行不同的操作
-		if (post[i] == '-')
-		{
-			b = resultStack.top();
-			resultStack.pop();
-			a = resultStack.top();
-			resultStack.pop();
-			c = a - b;
-			resultStack.push(c);
-		}
-		if (post[i] == '+')
-		{
-			b = resultStack.top();
-			resultStack.pop();
-			a = resultStack.top();
-			resultStack.pop();
-			c = a + b;
-			resultStack.push(c);
-		}
-		if (post[i] == '*')
-		{
-			b = resultStack.top();
-			resultStack.pop();
-			a = resultStack.top();
-			resultStack.pop();
-			c = a * b;
-			resultStack.push(c);
-		}
-		if (post[i] == '/')
-		{
-			b = resultStack.top();
-			resultStack.pop();
-			a = resultStack.top();
-			resultStack.pop();
-			c = a / b;
-			resultStack.push(c);
-		}
-	}
-	result = resultStack.top(); 
-	resultStack.pop();			//清空
-	return result;
+	if (c == '+' || c == '-' || c == '*' || c == '/' || c == '(' || c == ')')
+		return true;
+	else 
+		return false;
 }
 
-int main(void)
+int main()
 {
-
-	char in[100];
-	char aftertran[100];
-	int n = 0;
-	char a;
-	int i = 0;
-	cout << "请输入需要运算的式子（以=结束): ";
-	while (cin >> a) //循环获取输入直到遇到‘=’结束
-	{
-		if (a == '=')
-			break;
-		//输入检测
-		else if((a < '0' || a > '9' ) && a != '+' && a != '-' && a != '*' && a != '/' && a != ' '){
+	cout << "请输入要计算的表达式: ";
+	string str;
+	cin >> str;
+	
+	
+	//进行输入检测
+	int len = str.length();
+	char temp1[len];
+	strncpy(temp1,str.c_str(),len);
+	for(int i = 0; i < len; i++){
+		if((temp1[i] < '0' || temp1[i] > '9' ) && temp1[i] != '+' && temp1[i] != '-' && temp1[i] != '*' && temp1[i] != '/' && temp1[i] != '.'){
 			cout << "输入表达式中有非法字符";
 			exit(0);
 		}
-		in[i++] = a;
+		
 	}
-	transform(in, aftertran, n);
-	cout << "运算结果为: " << comput(aftertran, n) << endl;
-	return 0;
+	
+	
+	
+	vector<string> out; //存放转化后用于输出的字符
+	stack<char> opStact;	//存放操作符
+	
+	
+	//首先由中缀表达式转化为后缀表达式
+	for (size_t i = 0; i < str.length();)
+	{
+		if (!isOperator(str[i]))
+		{				   
+			char temp[20]; 
+			int flag = 0;
+			for (; !isOperator(str[i]) && i < str.length(); i++)
+			{
+				temp[flag++] = str[i];
+			}
+			temp[flag++] = 0;
+			string tempstr(temp, strlen(temp));
+			out.push_back(tempstr);
+		}
+		else
+		{
+			if ('(' == str[i])
+				opStact.push(str[i]);
+			else if (')' == str[i])
+			{
+				while (!opStact.empty() && (opStact.top() != '('))
+				{
+					char c = opStact.top();
+					char cc[2];
+					cc[0] = c;
+					cc[1] = 0;
+					string tempstr(cc, 1);
+					out.push_back(tempstr);
+					opStact.pop();
+				}
+				opStact.pop();
+			}
+			else
+			{ //其它操作符
+				if (!opStact.empty())
+				{										  
+					if (priority(str[i]) > priority(opStact.top())) ///比较优先级，较低则将栈顶操作符加到数组中，压栈
+						opStact.push(str[i]);
+					else
+					{ 
+						while ((!opStact.empty()) && (priority(str[i]) <= priority(opStact.top())))
+						{ //一直到比栈顶高
+							char c = opStact.top();
+							char cc[2];
+							cc[0] = c;
+							cc[1] = 0;
+							string tempstr(cc, 1);
+							out.push_back(tempstr);
+							opStact.pop();
+						}
+						opStact.push(str[i]);
+					}
+				}
+				else
+				{ 
+					opStact.push(str[i]);
+				}
+			}
+			i++;
+		}
+	}
+	while (!opStact.empty())
+	{
+		char c = opStact.top();
+		char cc[2];
+		cc[0] = c;
+		cc[1] = 0;
+		string tempstr(cc, 1);
+		out.push_back(tempstr);
+		opStact.pop();
+	}
+
+	
+	for (size_t i = 1; i < out.size(); i++)
+	{
+		string str1 = out[i];
+		string str = out[i - 1];
+		
+	}
+	
+
+	//根据后缀表达式求值
+	stack<double> calcuStack;
+	for (size_t i = 0; i < out.size(); i++)
+	{
+		string str = out[i];
+		if (!isOperator(str[0]))
+		{
+			const char *p = str.c_str();
+			double ff = atof(p);
+			calcuStack.push(ff);
+		}
+		else
+		{
+			double a = calcuStack.top();
+			calcuStack.pop();
+			double b = calcuStack.top();
+			calcuStack.pop();
+			char c = str[0];
+			switch (c)
+			{
+			case '+':
+				calcuStack.push(b + a);
+				break;
+			case '-':
+				calcuStack.push(b - a);
+				break;
+			case '*':
+				calcuStack.push(b * a);
+				break;
+			case '/':
+				calcuStack.push(b / a);
+				break;
+			case '%':
+				calcuStack.push((int)b % (int)a);
+				break;
+			}
+		}
+	}
+	cout << "运算结果为： " << calcuStack.top() << endl
+		 << endl;
 }
